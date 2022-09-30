@@ -3,13 +3,14 @@ package client
 import (
 	"github.com/grandeto/gdrive/cli"
 	"github.com/grandeto/gdrive/loader"
+	"github.com/grandeto/gdrive/util"
+	"github.com/grandeto/gdriver/config"
 	"github.com/grandeto/gdriver/constants"
 )
 
 type GdriveClient interface {
 	Start()
-	UploadFile(fname string) bool
-	UploadFileToDir(fname string, dirname string) bool
+	UploadFileToDir(cfg *config.Config, fname string, dirname string) bool
 }
 
 type Client struct{}
@@ -26,10 +27,12 @@ func (c *Client) Start() {
 	cli.SetHandlers(handlers)
 }
 
-func (c *Client) UploadFile(fname string) bool {
-	return cli.Handle([]string{string(constants.Upload), fname})
-}
+func (c *Client) UploadFileToDir(cfg *config.Config, fname string, dirname string) bool {
+	args := []string{string(constants.Upload), string(constants.Parent), dirname, fname}
 
-func (c *Client) UploadFileToDir(fname string, dirname string) bool {
-	return cli.Handle([]string{string(constants.Upload), string(constants.Parent), dirname, fname})
+	if cfg.UseServiceAccountAuth {
+		args = append(args, cfg.ClientArgs.ConfigArg, util.GetDefaultConfigDir(), cfg.ClientArgs.ServiceAccountArg, cfg.ClientArgs.AuthServiceAccountFileName)
+	}
+
+	return cli.Handle(args)
 }

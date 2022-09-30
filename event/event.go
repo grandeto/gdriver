@@ -83,7 +83,7 @@ func (e *Event) HandleEvent() {
 func (e *Event) OnCreate() {
 	switch e.Cfg.SyncAction {
 	case constants.UploadFileToDir:
-		result := e.Client.UploadFileToDir(e.Payload.name, e.Cfg.RemoteDir)
+		result := e.Client.UploadFileToDir(e.Cfg, e.Payload.name, e.Cfg.RemoteDir)
 
 		e.SetResult(result)
 
@@ -96,7 +96,7 @@ func (e *Event) OnCreate() {
 func (e *Event) PostProcess() {
 	if !e.Result {
 		logger.Error(fmt.Sprintf("event processing failed: %s - %s - %s - %s - %s",
-			e.Payload.name, e.Cfg.OnEvent, e.Cfg.SyncAction, e.Cfg.LocalDirAbsPath, e.Cfg.RemoteDir))
+			e.Payload.name, e.Cfg.OnEvent, e.Cfg.SyncAction, e.Cfg.LocalDirToWatchAbsPath, e.Cfg.RemoteDir))
 
 		time.Sleep(time.Duration(e.Cfg.QueueProcessingInterval) * time.Second)
 
@@ -119,7 +119,7 @@ func (e *Event) PostProcess() {
 func (e *Event) HandleFileDeleteAfterUpload() {
 	if err := os.Remove(e.Payload.name); err != nil {
 		logger.Error(fmt.Sprintf("file delete after upload failed: %s - %s - %s - %s - %s",
-			e.Payload.name, e.Cfg.OnEvent, e.Cfg.SyncAction, e.Cfg.LocalDirAbsPath, e.Cfg.RemoteDir))
+			e.Payload.name, e.Cfg.OnEvent, e.Cfg.SyncAction, e.Cfg.LocalDirToWatchAbsPath, e.Cfg.RemoteDir))
 
 		time.Sleep(time.Duration(e.Cfg.QueueProcessingInterval) * time.Second)
 

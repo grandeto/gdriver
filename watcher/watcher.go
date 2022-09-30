@@ -71,7 +71,7 @@ func Watch(cfg *config.Config, eventer *event.EventCreator, client client.Gdrive
 	}()
 
 	// Add a path.
-	err = watcher.WatchDir(cfg.LocalDirAbsPath)
+	err = watcher.WatchDir(cfg.LocalDirToWatchAbsPath)
 
 	if err != nil {
 		return nil, err
