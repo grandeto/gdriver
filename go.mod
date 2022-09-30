@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/fsnotify/fsnotify v1.5.4
-	github.com/grandeto/gdrive v0.1.0
+	github.com/grandeto/gdrive v1.0.0
 	github.com/joho/godotenv v1.4.0
 	golang.org/x/exp v0.0.0-20220921164117-439092de6870
 )
