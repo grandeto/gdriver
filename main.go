@@ -9,8 +9,6 @@ import (
 	"github.com/grandeto/gdriver/watcher"
 )
 
-const gdriveCmd = "gdrive"
-
 func main() {
 	cfg := config.NewConfig()
 
