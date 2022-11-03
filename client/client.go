@@ -10,7 +10,7 @@ import (
 
 type GdriveClient interface {
 	Start()
-	UploadFileToDir(cfg *config.Config, fname string, dirname string) bool
+	UploadFileToDir(cfg *config.ClientArguments, fname string, dirname string) bool
 }
 
 type Client struct{}
@@ -27,11 +27,11 @@ func (c *Client) Start() {
 	cli.SetHandlers(handlers)
 }
 
-func (c *Client) UploadFileToDir(cfg *config.Config, fname string, dirname string) bool {
+func (c *Client) UploadFileToDir(cfgArgs *config.ClientArguments, fname string, dirname string) bool {
 	args := []string{string(constants.Upload), string(constants.Parent), dirname, fname}
 
-	if cfg.UseServiceAccountAuth {
-		args = append(args, cfg.ClientArgs.ConfigArg, util.GetDefaultConfigDir(), cfg.ClientArgs.ServiceAccountArg, cfg.ClientArgs.AuthServiceAccountFileName)
+	if cfgArgs.UseServiceAccountAuth {
+		args = append(args, cfgArgs.ConfigArg, util.GetDefaultConfigDir(), cfgArgs.ServiceAccountArg, cfgArgs.AuthServiceAccountFileName)
 	}
 
 	return cli.Handle(args)
