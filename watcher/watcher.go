@@ -66,7 +66,7 @@ func Watch(cfg *config.Config, eventer *event.EventCreator, client client.Gdrive
 func dedupLoop(cfg *config.Config, eventer *event.EventCreator, client client.GdriveClient, w *WatchProcessor) {
 	var (
 		// Wait for new events; each new event resets the timer.
-		waitFor = 2000 * time.Millisecond
+		waitFor = 3000 * time.Millisecond
 
 		// Keep track of the timers, as path → timer.
 		mu     sync.Mutex
