@@ -91,6 +91,7 @@ func (e *Event) OnCreate() {
 }
 
 func (e *Event) PostProcess(evType constants.EventType) {
+	// TODO implement retry until and max retry
 	if !e.Result {
 		logger.Error(fmt.Sprintf("event processing failed: %s - %s - %s - %s - %s",
 			e.Payload.name, evType.String(), e.Cfg.SyncAction, e.Cfg.LocalDirToWatchAbsPath, e.Cfg.RemoteDir))
@@ -114,6 +115,7 @@ func (e *Event) PostProcess(evType constants.EventType) {
 }
 
 func (e *Event) HandleFileDeleteAfterUpload(evType constants.EventType) {
+	// TODO implement retry until and max retry
 	if fileExists(e.Payload.name) {
 		if err := os.Remove(e.Payload.name); err != nil {
 			logger.Error(fmt.Sprintf("file deletion after upload failed: %s - %s - %s - %s - %s - %s",
