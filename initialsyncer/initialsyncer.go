@@ -3,14 +3,14 @@ package initialsyncer
 import (
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/grandeto/gdriver/client"
 	"github.com/grandeto/gdriver/config"
+	"github.com/grandeto/gdriver/constants"
 	"github.com/grandeto/gdriver/event"
 )
 
-func Sync(cfg *config.Config, eventer *event.EventCreator, client client.GdriveClient) error {
+func SyncCreated(cfg *config.Config, eventer *event.EventCreator, client client.GdriveClient) error {
 	files, err := os.ReadDir(cfg.LocalDirToWatchAbsPath)
 
 	if err != nil {
@@ -22,7 +22,7 @@ func Sync(cfg *config.Config, eventer *event.EventCreator, client client.GdriveC
 		go func() {
 			ev := eventer.NewEvent(cfg)
 			ev.SetClient(client)
-			ev.SetPayload(filepath.Join(cfg.LocalDirToWatchAbsPath, f.Name()), strings.ToUpper(cfg.OnEvent))
+			ev.SetPayload(filepath.Join(cfg.LocalDirToWatchAbsPath, f.Name()), constants.Create.String())
 			ev.HandleEvent()
 		}()
 	}

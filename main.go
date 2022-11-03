@@ -18,7 +18,7 @@ func main() {
 
 	eventCreator := event.NewEventCreator()
 
-	err := initialsyncer.Sync(cfg, eventCreator, client)
+	err := initialsyncer.SyncCreated(cfg, eventCreator, client)
 
 	if err != nil {
 		logger.Fatal(err)
