@@ -1,6 +1,6 @@
 # Gdriver
 
-Gdriver is intended to automate the actions provided by [gdrive](https://github.com/grandeto/gdrive) lib by watching for changes a given local folder and automatically executing some preconfigured action
+Gdriver is intended to automate the actions provided by [gdrive](https://github.com/grandeto/gdrive) lib by watching for changes a given local folder and automatically executing some preconfigured actions
 
 *NOTE: Currently only `Upload file to directory (uploadFileToDir)` action is implemented
 
@@ -33,6 +33,10 @@ The gdrive binary should now be available at `$GOPATH/bin/gdriver`
 or
 
 Download `gdriver` from one of the [links in the latest release](https://github.com/grandeto/gdriver/releases).
+
+## Initialization
+
+Run compiled binary as a daemon or through supervisor
 
 ## Authentication
 
