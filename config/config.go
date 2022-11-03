@@ -10,25 +10,22 @@ import (
 
 type Config struct {
 	LocalDirToWatchAbsPath  string
-	OnEvent                 string
 	SyncAction              string
 	RemoteDir               string
 	DeleteAfterUpload       bool
 	QueueProcessingInterval int
-	UseServiceAccountAuth   bool
-	ClientArgs              *ClientArgs
+	ClientArgs              *ClientArguments
 }
 
 func NewConfig() *Config {
 	return &Config{
 		LocalDirToWatchAbsPath:  os.Getenv("LOCAL_DIR_TO_WATCH_ABS_PATH"),
-		OnEvent:                 os.Getenv("ON_EVENT"),
 		SyncAction:              os.Getenv("SYNC_ACTION"),
 		RemoteDir:               os.Getenv("REMOTE_DIR"),
 		DeleteAfterUpload:       getEnvAsBool("DELETE_AFTER_UPLOAD", true),
 		QueueProcessingInterval: getEnvAsInt("QUEUE_PROCESSING_INTERVAL", 3),
-		UseServiceAccountAuth:   getEnvAsBool("USE_SERVICE_ACCOUNT_AUTH", true),
-		ClientArgs: &ClientArgs{
+		ClientArgs: &ClientArguments{
+			UseServiceAccountAuth:      getEnvAsBool("USE_SERVICE_ACCOUNT_AUTH", true),
 			ConfigArg:                  getEnvWithDefault("CONFIG_ARG", constants.ConfigArg),
 			ServiceAccountArg:          getEnvWithDefault("AUTH_SERVICE_ACCOUNT_ARG", constants.ServiceAccountArg),
 			AuthServiceAccountFileName: getAuthServiceAccountFileName("AUTH_SERVICE_ACCOUNT_FILE_NAME"),
@@ -36,7 +33,8 @@ func NewConfig() *Config {
 	}
 }
 
-type ClientArgs struct {
+type ClientArguments struct {
+	UseServiceAccountAuth      bool
 	ConfigArg                  string
 	ServiceAccountArg          string
 	AuthServiceAccountFileName string
