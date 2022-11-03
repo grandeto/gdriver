@@ -1,6 +1,11 @@
 package watcher
 
 import (
+	"math"
+	"os"
+	"sync"
+	"time"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/grandeto/gdriver/client"
 	"github.com/grandeto/gdriver/config"
@@ -46,29 +51,7 @@ func Watch(cfg *config.Config, eventer *event.EventCreator, client client.Gdrive
 	}
 
 	// Start listening for events.
-	go func() {
-		for {
-			select {
-			case e, ok := <-watcher.Events():
-				if !ok {
-					return
-				}
-
-				go func() {
-					ev := eventer.NewEvent(cfg)
-					ev.SetClient(client)
-					ev.SetPayload(e.Name, e.Op.String())
-					ev.HandleEvent()
-				}()
-			case err, ok := <-watcher.Errors():
-				if !ok {
-					return
-				}
-
-				logger.Error(err)
-			}
-		}
-	}()
+	go dedupLoop(cfg, eventer, client, watcher)
 
 	// Add a path.
 	err = watcher.WatchDir(cfg.LocalDirToWatchAbsPath)
@@ -78,4 +61,69 @@ func Watch(cfg *config.Config, eventer *event.EventCreator, client client.Gdrive
 	}
 
 	return watcher, nil
+}
+
+func dedupLoop(cfg *config.Config, eventer *event.EventCreator, client client.GdriveClient, w *WatchProcessor) {
+	var (
+		// Wait for new events; each new event resets the timer.
+		waitFor = 2000 * time.Millisecond
+
+		// Keep track of the timers, as path → timer.
+		mu     sync.Mutex
+		timers = make(map[string]*time.Timer)
+
+		// Callback we run.
+		maybeTriggerEvent = func(e fsnotify.Event) {
+			file, err := os.Stat(e.Name)
+
+			if err == nil && file.Size() != 0 {
+				go func() {
+					ev := eventer.NewEvent(cfg)
+					ev.SetClient(client)
+					ev.SetPayload(e.Name, e.Op.String())
+					ev.HandleEvent()
+				}()
+			}
+
+			// Don't need to remove the timer if you don't have a lot of files.
+			mu.Lock()
+			delete(timers, e.Name)
+			mu.Unlock()
+		}
+	)
+
+	for {
+		select {
+		// Read from Errors.
+		case err, ok := <-w.Errors():
+			if !ok { // Channel was closed (i.e. Watcher.Close() was called).
+				return
+			}
+
+			logger.Error(err)
+		// Read from Events.
+		case e, ok := <-w.Events():
+			if !ok { // Channel was closed (i.e. Watcher.Close() was called).
+				return
+			}
+
+			// Get timer.
+			mu.Lock()
+			t, ok := timers[e.Name]
+			mu.Unlock()
+
+			// No timer yet, so create one.
+			if !ok {
+				t = time.AfterFunc(math.MaxInt64, func() { maybeTriggerEvent(e) })
+				t.Stop()
+
+				mu.Lock()
+				timers[e.Name] = t
+				mu.Unlock()
+			}
+
+			// Reset the timer for this path, so it will start from 100ms again.
+			t.Reset(waitFor)
+		}
+	}
 }
