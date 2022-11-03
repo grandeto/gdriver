@@ -18,6 +18,7 @@ func SyncCreated(cfg *config.Config, eventer *event.EventCreator, client client.
 	}
 
 	for _, f := range files {
+		// TODO implement current write and zero bytes skip mechanism
 		f := f
 		go func() {
 			ev := eventer.NewEvent(cfg)
