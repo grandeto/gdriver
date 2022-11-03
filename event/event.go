@@ -3,7 +3,6 @@ package event
 import (
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/grandeto/gdriver/client"
@@ -71,11 +70,9 @@ func (e *Event) SetResult(result bool) {
 }
 
 func (e *Event) HandleEvent() {
-	onEvent := strings.ToUpper(e.Cfg.OnEvent)
-
-	// TODO: Add handlers on demand
+	// TODO: Add new handlers on demand
 	switch {
-	case onEvent == constants.Create && e.Payload.operation == constants.Create:
+	case e.Payload.operation == constants.Create.String():
 		e.OnCreate()
 	}
 }
@@ -83,20 +80,20 @@ func (e *Event) HandleEvent() {
 func (e *Event) OnCreate() {
 	switch e.Cfg.SyncAction {
 	case constants.UploadFileToDir:
-		result := e.Client.UploadFileToDir(e.Cfg, e.Payload.name, e.Cfg.RemoteDir)
+		result := e.Client.UploadFileToDir(e.Cfg.ClientArgs, e.Payload.name, e.Cfg.RemoteDir)
 
 		e.SetResult(result)
 
-		e.PostProcess()
+		e.PostProcess(constants.Create)
 	default:
 		logger.Info("unable to recognize sync action")
 	}
 }
 
-func (e *Event) PostProcess() {
+func (e *Event) PostProcess(evType constants.EventType) {
 	if !e.Result {
 		logger.Error(fmt.Sprintf("event processing failed: %s - %s - %s - %s - %s",
-			e.Payload.name, e.Cfg.OnEvent, e.Cfg.SyncAction, e.Cfg.LocalDirToWatchAbsPath, e.Cfg.RemoteDir))
+			e.Payload.name, evType.String(), e.Cfg.SyncAction, e.Cfg.LocalDirToWatchAbsPath, e.Cfg.RemoteDir))
 
 		time.Sleep(time.Duration(e.Cfg.QueueProcessingInterval) * time.Second)
 
@@ -112,19 +109,34 @@ func (e *Event) PostProcess() {
 				constants.UploadFileToDir},
 			e.Cfg.SyncAction) &&
 		e.Cfg.DeleteAfterUpload {
-		e.HandleFileDeleteAfterUpload()
+		e.HandleFileDeleteAfterUpload(evType)
 	}
 }
 
-func (e *Event) HandleFileDeleteAfterUpload() {
-	if err := os.Remove(e.Payload.name); err != nil {
-		logger.Error(fmt.Sprintf("file delete after upload failed: %s - %s - %s - %s - %s",
-			e.Payload.name, e.Cfg.OnEvent, e.Cfg.SyncAction, e.Cfg.LocalDirToWatchAbsPath, e.Cfg.RemoteDir))
+func (e *Event) HandleFileDeleteAfterUpload(evType constants.EventType) {
+	if fileExists(e.Payload.name) {
+		if err := os.Remove(e.Payload.name); err != nil {
+			logger.Error(fmt.Sprintf("file deletion after upload failed: %s - %s - %s - %s - %s - %s",
+				err.Error(),
+				e.Payload.name,
+				evType.String(),
+				e.Cfg.SyncAction,
+				e.Cfg.LocalDirToWatchAbsPath,
+				e.Cfg.RemoteDir))
 
-		time.Sleep(time.Duration(e.Cfg.QueueProcessingInterval) * time.Second)
+			time.Sleep(time.Duration(e.Cfg.QueueProcessingInterval) * time.Second)
 
-		logger.Info("deletion queued ", e.Payload.name)
+			logger.Info("deletion queued ", e.Payload.name)
 
-		e.HandleFileDeleteAfterUpload()
+			e.HandleFileDeleteAfterUpload(evType)
+		}
 	}
+}
+
+func fileExists(path string) bool {
+	if _, err := os.Stat(path); err == nil {
+		return true
+	}
+
+	return false
 }
