@@ -73,7 +73,7 @@ You will be prompted for a new verification code if the folder does not exist.
 
 Referrence to [gdrive](https://github.com/grandeto/gdrive) documentation
 
-## Example systemd config
+## Example systemd user config
 
 - in `.config/systemd/user/gdriver.service`
 
