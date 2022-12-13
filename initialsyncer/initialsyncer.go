@@ -10,7 +10,7 @@ import (
 	"github.com/grandeto/gdriver/event"
 )
 
-func SyncCreated(cfg *config.Config, eventer *event.EventCreator, client client.GdriveClient) error {
+func SyncCreated(cfg *config.Config, eventer event.Creator, client client.GdriveClient) error {
 	files, err := os.ReadDir(cfg.LocalDirToWatchAbsPath)
 
 	if err != nil {

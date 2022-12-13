@@ -13,7 +13,7 @@ import (
 )
 
 type Creator interface {
-	NewEvent() *Event
+	NewEvent(cfg *config.Config) *Event
 }
 
 type EventCreator struct{}

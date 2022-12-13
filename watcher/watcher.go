@@ -43,7 +43,7 @@ func (wp *WatchProcessor) Close() error {
 	return wp.processor.Close()
 }
 
-func Watch(cfg *config.Config, eventer *event.EventCreator, client client.GdriveClient) (*WatchProcessor, error) {
+func Watch(cfg *config.Config, eventer event.Creator, client client.GdriveClient) (*WatchProcessor, error) {
 	watcher, err := NewWatchProcessor()
 
 	if err != nil {
@@ -63,7 +63,7 @@ func Watch(cfg *config.Config, eventer *event.EventCreator, client client.Gdrive
 	return watcher, nil
 }
 
-func dedupLoop(cfg *config.Config, eventer *event.EventCreator, client client.GdriveClient, w *WatchProcessor) {
+func dedupLoop(cfg *config.Config, eventer event.Creator, client client.GdriveClient, w *WatchProcessor) {
 	var (
 		// Wait for new events; each new event resets the timer.
 		waitFor = 3000 * time.Millisecond
