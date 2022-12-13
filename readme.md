@@ -72,3 +72,28 @@ You will be prompted for a new verification code if the folder does not exist.
 ## Other
 
 Referrence to [gdrive](https://github.com/grandeto/gdrive) documentation
+
+## Example systemd config
+
+- in `.config/systemd/user/gdriver.service`
+
+```
+[Unit]
+Description=Gdriver
+Wants=network-online.target
+RequiresMountsFor=/home
+After=network.target network-online.target
+
+[Service]
+EnvironmentFile=/home/user/go/gdriver/.env
+WorkingDirectory=/home/user/go/gdriver
+ExecStart=/home/user/go/gdriver/gdriver
+Restart=always
+
+[Install]
+WantedBy=default.target network-online.target
+```
+
+- `systemctl start gdriver --user`
+
+- `systemctl enable gdriver --user`
