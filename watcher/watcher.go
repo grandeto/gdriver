@@ -8,23 +8,29 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/grandeto/gdriver/client"
-	"github.com/grandeto/gdriver/config"
 	"github.com/grandeto/gdriver/event"
 	"github.com/grandeto/gdriver/logger"
 )
 
-type WatchProcessor struct {
-	processor *fsnotify.Watcher
+type Watcher interface {
+	Watch(eventHandler event.Eventer,
+		client client.Synchronizer) error
+	DedupLoop(eventHandler event.Eventer, client client.Synchronizer)
 }
 
-func NewWatchProcessor() (*WatchProcessor, error) {
+type WatchProcessor struct {
+	LocalDirToWatchAbsPath string
+	processor              *fsnotify.Watcher
+}
+
+func NewWatchProcessor(LocalDirToWatchAbsPath string) (*WatchProcessor, error) {
 	watcher, err := fsnotify.NewWatcher()
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &WatchProcessor{processor: watcher}, nil
+	return &WatchProcessor{LocalDirToWatchAbsPath, watcher}, nil
 }
 
 func (wp *WatchProcessor) WatchDir(dirpath string) error {
@@ -43,27 +49,22 @@ func (wp *WatchProcessor) Close() error {
 	return wp.processor.Close()
 }
 
-func Watch(cfg *config.Config, eventer event.Creator, client client.GdriveClient) (*WatchProcessor, error) {
-	watcher, err := NewWatchProcessor()
-
-	if err != nil {
-		return nil, err
-	}
+func (wp *WatchProcessor) Watch(eventHandler event.Eventer, client client.Synchronizer) error {
 
 	// Start listening for events.
-	go dedupLoop(cfg, eventer, client, watcher)
+	go wp.DedupLoop(eventHandler, client)
 
 	// Add a path.
-	err = watcher.WatchDir(cfg.LocalDirToWatchAbsPath)
+	err := wp.WatchDir(wp.LocalDirToWatchAbsPath)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return watcher, nil
+	return nil
 }
 
-func dedupLoop(cfg *config.Config, eventer event.Creator, client client.GdriveClient, w *WatchProcessor) {
+func (wp *WatchProcessor) DedupLoop(eventHandler event.Eventer, client client.Synchronizer) {
 	var (
 		// Wait for new events; each new event resets the timer.
 		waitFor = 3000 * time.Millisecond
@@ -78,10 +79,10 @@ func dedupLoop(cfg *config.Config, eventer event.Creator, client client.GdriveCl
 
 			if err == nil && file.Size() != 0 {
 				go func() {
-					ev := eventer.NewEvent(cfg)
+					ev := eventHandler.NewEvent()
 					ev.SetClient(client)
 					ev.SetPayload(e.Name, e.Op.String())
-					ev.HandleEvent()
+					ev.Handle()
 				}()
 			}
 
@@ -95,14 +96,14 @@ func dedupLoop(cfg *config.Config, eventer event.Creator, client client.GdriveCl
 	for {
 		select {
 		// Read from Errors.
-		case err, ok := <-w.Errors():
+		case err, ok := <-wp.Errors():
 			if !ok { // Channel was closed (i.e. Watcher.Close() was called).
 				return
 			}
 
 			logger.Error(err)
 		// Read from Events.
-		case e, ok := <-w.Events():
+		case e, ok := <-wp.Events():
 			if !ok { // Channel was closed (i.e. Watcher.Close() was called).
 				return
 			}

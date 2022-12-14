@@ -12,18 +12,20 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type Creator interface {
-	NewEvent(cfg *config.Config) *Event
+type Eventer interface {
+	NewEvent() *Event
 }
 
-type EventCreator struct{}
-
-func NewEventCreator() *EventCreator {
-	return &EventCreator{}
+type EventHandler struct {
+	cfg *config.Config
 }
 
-func (ep *EventCreator) NewEvent(cfg *config.Config) *Event {
-	return NewEvent(cfg)
+func NewEventHandler(cfg *config.Config) *EventHandler {
+	return &EventHandler{cfg}
+}
+
+func (e *EventHandler) NewEvent() *Event {
+	return NewEvent(e.cfg)
 }
 
 type payload struct {
@@ -40,7 +42,7 @@ func newPayload(name, operation string) *payload {
 
 type Event struct {
 	Payload *payload
-	Client  client.GdriveClient
+	Client  client.Synchronizer
 	Cfg     *config.Config
 	Result  bool
 }
@@ -55,7 +57,7 @@ func (e *Event) GetConfig() *config.Config {
 	return e.Cfg
 }
 
-func (e *Event) SetClient(client client.GdriveClient) {
+func (e *Event) SetClient(client client.Synchronizer) {
 	e.Client = client
 }
 
@@ -69,7 +71,7 @@ func (e *Event) SetResult(result bool) {
 	e.Result = result
 }
 
-func (e *Event) HandleEvent() {
+func (e *Event) Handle() {
 	// TODO: Add new handlers on demand
 	switch {
 	case e.Payload.operation == constants.Create.String():
@@ -80,7 +82,7 @@ func (e *Event) HandleEvent() {
 func (e *Event) OnCreate() {
 	switch e.Cfg.SyncAction {
 	case constants.UploadFileToDir:
-		result := e.Client.UploadFileToDir(e.Cfg.ClientArgs, e.Payload.name, e.Cfg.RemoteDir)
+		result := e.Client.UploadFileToDir(e.Payload.name, e.Cfg.RemoteDir)
 
 		e.SetResult(result)
 
@@ -100,7 +102,7 @@ func (e *Event) PostProcess(evType constants.EventType) {
 
 		logger.Info("prcessing queued ", e.Payload.name)
 
-		e.HandleEvent()
+		e.Handle()
 	}
 
 	if e.Result &&

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/grandeto/gdriver/client"
 	"github.com/grandeto/gdriver/config"
+	"github.com/grandeto/gdriver/engine"
 	"github.com/grandeto/gdriver/event"
 	"github.com/grandeto/gdriver/initialsyncer"
 	"github.com/grandeto/gdriver/logger"
@@ -12,25 +13,31 @@ import (
 func main() {
 	cfg := config.NewConfig()
 
-	client := client.NewClient()
+	client := client.NewGdriveClient(cfg.ClientArgs)
 
-	client.Start()
+	eventHandler := event.NewEventHandler(cfg)
 
-	eventCreator := event.NewEventCreator()
+	syncer := initialsyncer.NewInitialSync(cfg.LocalDirToWatchAbsPath, eventHandler, client)
 
-	err := initialsyncer.Sync(cfg, eventCreator, client)
+	watcher, watcherErr := watcher.NewWatchProcessor(cfg.LocalDirToWatchAbsPath)
 
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	watcher, err := watcher.Watch(cfg, eventCreator, client)
-
-	if err != nil {
-		logger.Fatal(err)
+	if watcherErr != nil {
+		logger.Fatal(watcherErr)
 	}
 
 	defer watcher.Close()
+
+	eng := engine.NewEngine(syncer, watcher, eventHandler, client)
+
+	eng.Start()
+
+	if syncErr := eng.Sync(); syncErr != nil {
+		logger.Fatal(syncErr)
+	}
+
+	if watchErr := eng.Watch(); watchErr != nil {
+		logger.Fatal(watchErr)
+	}
 
 	// Block main goroutine forever.
 	<-make(chan struct{})
