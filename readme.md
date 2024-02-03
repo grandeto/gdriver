@@ -16,12 +16,6 @@ You need to set all the environment variables present in `.env-example`
 
 ## Instalation
 
-### With [Homebrew](http://brew.sh) on Mac
-
-```
-brew install gdrive
-```
-
 ### Compile from source
 
 ```bash
@@ -32,7 +26,11 @@ The gdrive binary should now be available at `$GOPATH/bin/gdriver`
 
 or
 
-Download `gdriver` from one of the [links in the latest release](https://github.com/grandeto/gdriver/releases).
+Download `gdriver` from one of the [links in the latest release](https://github.com/grandeto/gdriver/releases)
+
+then
+
+`go build .`
 
 ## Initialization
 
