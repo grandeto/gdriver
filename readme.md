@@ -48,7 +48,7 @@ If you want to use a service account, instead of being interactively prompted fo
 authentication, you need to set up `USE_SERVICE_ACCOUNT_AUTH` environment variable to `true`
 and `AUTH_SERVICE_ACCOUNT_FILE_NAME` to hold your Service Account file name 
 e.g. `AUTH_SERVICE_ACCOUNT_FILE_NAME="gdrive-automated-asdf.json"`.
-Then place your Service Account file inside the `.gdrive` folder in your home directory.
+Then place your Service Account file inside the `~/.gdrive` folder in your home directory.
 
 ### Prompt
 
@@ -59,7 +59,7 @@ you will be prompted for a verification code.
 The code is obtained by following the instructions printed inside 
 `gdrive_auth_value.txt` in your home directory and authenticating with the 
 google account for the drive you want access to.
-This will create a token file inside the `.gdrive` folder in your home directory.
+This will create a token file inside the `~/.gdrive` folder in your home directory.
 
 Note that anyone with access to this file will also have access to your google drive.
 
@@ -71,9 +71,9 @@ You will be prompted for a new verification code if the folder does not exist.
 
 Referrence to [gdrive](https://github.com/grandeto/gdrive) documentation
 
-## Example systemd user config
+## Ubuntu - Example systemd user config
 
-- in `.config/systemd/user/gdriver.service`
+- in `~/.config/systemd/user/gdriver.service`
 
 ```
 [Unit]
@@ -95,3 +95,32 @@ WantedBy=default.target network-online.target
 - `systemctl start gdriver --user`
 
 - `systemctl enable gdriver --user`
+
+## Mac - Example plist user config
+
+- in `~/Library/LaunchAgents/com.gdriver.plist`
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.gdriver.app</string>
+	<key>WorkingDirectory</key>
+	<string>path to dir containing .env</string>
+	<key>Program</key>
+	<string>path to griver executable</string>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>StandardOutPath</key>
+	<string>/tmp/gdriver.log</string>
+	<key>StandardErrorPath</key>
+	<string>/tmp/gdriver.error.log</string>
+</dict>
+</plist>
+```
+
+- `launchctl load -w ~/Library/LaunchAgents/com.gdriver.plist`
