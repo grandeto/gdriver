@@ -7,16 +7,21 @@ func (e EventType) String() string {
 }
 
 const (
-	// Dir Events
+	// Watch Dir Events
 	Create EventType = "CREATE"
 
-	// Client args
-	Upload            string = "upload"
-	Parent            string = "--parent"
-	ConfigArg         string = "--config"
-	ServiceAccountArg string = "--service-account"
-
 	// Client actions
-	UploadFile      string = "uploadFile"
 	UploadFileToDir string = "uploadFileToDir"
+
+	// Handler args
+	UploadArg              string = "upload" // Upload file or directory
+	ParentRemoteDirFlag    string = "--parent"
+	ConfigDirFlag          string = "--config"
+	ServiceAccountAuthFlag string = "--service-account"
+)
+
+var (
+	AllowedSyncActions         []string = []string{UploadFileToDir}
+	AllowedOnFileCreateActions []string = []string{UploadFileToDir}
+	AllowedDeleteAfterUpload   []string = []string{UploadFileToDir}
 )
