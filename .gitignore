@@ -24,4 +24,5 @@ vendor/
 .editorconfig
 .vscode/
 .env
+builds/
 gdriver
