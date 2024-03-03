@@ -6,13 +6,9 @@ Gdriver is intended to automate the actions provided by [gdrive](https://github.
 
 ## Prerequisites
 
-None, binaries are statically linked.
+Go version 1.8 or higher.
 
-If you want to compile from source you need the [go toolchain](http://golang.org/doc/install).
-
-Version 1.8 or higher.
-
-You need to set all the environment variables present in `.env-example`
+Create an `.env` and set all the environment variables from `.env-example`
 
 ## Instalation
 
@@ -22,7 +18,7 @@ You need to set all the environment variables present in `.env-example`
 go get github.com/grandeto/gdriver
 ```
 
-The gdrive binary should now be available at `$GOPATH/bin/gdriver`
+The gdriver binary should now be available at `$GOPATH/bin/gdriver`
 
 or
 
@@ -40,7 +36,7 @@ Run compiled binary as a daemon or through supervisor
 
 You need to choose between two authentication methods:
 
-### Service Account (enabled by default)
+### Service Account
 
 For server to server communication, where user interaction is not a viable option, 
 is it possible to use a service account, as described in this [Google document](https://developers.google.com/identity/protocols/OAuth2ServiceAccount).
@@ -48,7 +44,9 @@ If you want to use a service account, instead of being interactively prompted fo
 authentication, you need to set up `USE_SERVICE_ACCOUNT_AUTH` environment variable to `true`
 and `AUTH_SERVICE_ACCOUNT_FILE_NAME` to hold your Service Account file name 
 e.g. `AUTH_SERVICE_ACCOUNT_FILE_NAME="gdrive-automated-asdf.json"`.
-Then place your Service Account file inside the `~/.gdrive` folder in your home directory.
+Then place your Service Account file inside your `GDRIVE_CONFIG_DIR` (deafults to `~/.gdrive`).
+
+Note that anyone with access to this file will also have access to your google drive.
 
 ### Prompt
 
@@ -59,17 +57,14 @@ you will be prompted for a verification code.
 The code is obtained by following the instructions printed inside 
 `gdrive_auth_value.txt` in your home directory and authenticating with the 
 google account for the drive you want access to.
-This will create a token file inside the `~/.gdrive` folder in your home directory.
+This will create a token file inside your `GDRIVE_CONFIG_DIR` (deafults to `~/.gdrive`).
 
 Note that anyone with access to this file will also have access to your google drive.
 
-If you want to manage multiple drives you can set the environment variable `GDRIVE_CONFIG_DIR`.
+### Note
+
+If you want to manage multiple drives you can set different environment variable `GDRIVE_CONFIG_DIR` for each client binary you build.
 Example: `GDRIVE_CONFIG_DIR="/home/user/.gdrive-secondary"`
-You will be prompted for a new verification code if the folder does not exist.
-
-## Other
-
-Referrence to [gdrive](https://github.com/grandeto/gdrive) documentation
 
 ## Ubuntu - Example systemd user config
 
@@ -124,3 +119,7 @@ WantedBy=default.target network-online.target
 ```
 
 - `launchctl load -w ~/Library/LaunchAgents/com.gdriver.plist`
+
+## Other
+
+Referrence to [gdrive](https://github.com/grandeto/gdrive) documentation

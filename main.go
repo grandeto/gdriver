@@ -13,7 +13,7 @@ import (
 func main() {
 	cfg := config.NewConfig()
 
-	client := client.NewGdriveClient(cfg.ClientArgs)
+	client := client.NewGdriveClient(cfg.GdriveClient)
 
 	eventHandler := event.NewEventHandler(cfg)
 

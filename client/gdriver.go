@@ -3,16 +3,14 @@ package client
 import (
 	"github.com/grandeto/gdrive/cli"
 	"github.com/grandeto/gdrive/loader"
-	"github.com/grandeto/gdrive/util"
 	"github.com/grandeto/gdriver/config"
-	"github.com/grandeto/gdriver/constants"
 )
 
 type GdriveClient struct {
-	cfgArgs *config.ClientArguments
+	cfg *config.GdriveClient
 }
 
-func NewGdriveClient(cfgArgs *config.ClientArguments) *GdriveClient {
+func NewGdriveClient(cfgArgs *config.GdriveClient) *GdriveClient {
 	return &GdriveClient{cfgArgs}
 }
 
@@ -24,11 +22,11 @@ func (c *GdriveClient) Start() {
 	cli.SetHandlers(handlers)
 }
 
-func (c *GdriveClient) UploadFileToDir(fname string, dirname string) bool {
-	args := []string{string(constants.Upload), string(constants.Parent), dirname, fname}
+func (c *GdriveClient) UploadFileToDir(localFilePath string) bool {
+	args := []string{c.cfg.UploadArg, c.cfg.ParentRemoteDirFlag, c.cfg.ParentRemoteDirID, localFilePath, c.cfg.ConfigDirFlag, c.cfg.ConfigDir}
 
-	if c.cfgArgs.UseServiceAccountAuth {
-		args = append(args, c.cfgArgs.ConfigArg, util.GetDefaultConfigDir(), c.cfgArgs.ServiceAccountArg, c.cfgArgs.AuthServiceAccountFileName)
+	if c.cfg.UseServiceAccountAuth {
+		args = append(args, c.cfg.ServiceAccountAuthFlag, c.cfg.ServiceAccountAuthFileName)
 	}
 
 	return cli.Handle(args)
