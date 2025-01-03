@@ -12,63 +12,53 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
+type GdriveClient struct {
+	ServiceAccountAuth         bool
+	ServiceAccountAuthFlag     string
+	ServiceAccountAuthFileName string
+	UploadArg                  string
+	ConfigDirFlag              string
+	ConfigDirPath              string
+	ParentRemoteDirFlag        string
+	ParentRemoteDirID          string
+}
+
 type Config struct {
-	LocalDirToWatchAbsPath  string
-	SyncAction              string
-	DeleteAfterUpload       bool
-	QueueProcessingInterval int
-	GdriveClient            *GdriveClient
+	LocalDirToSync             string
+	SyncAction                 string
+	DeleteLocalFileAfterUpload bool
+	SyncRetryInterval          int
+	GdriveClient               *GdriveClient
 }
 
 func NewConfig() *Config {
 	return &Config{
-		LocalDirToWatchAbsPath:  getEnv("LOCAL_DIR_TO_WATCH_ABS_PATH"),
-		SyncAction:              getSyncAction("SYNC_ACTION"),
-		DeleteAfterUpload:       getEnvAsBool("DELETE_AFTER_UPLOAD"),
-		QueueProcessingInterval: getEnvAsInt("QUEUE_PROCESSING_INTERVAL"),
+		LocalDirToSync:             getEnv("LOCAL_DIR_TO_SYNC"),
+		SyncAction:                 getEnv("SYNC_ACTION"),
+		DeleteLocalFileAfterUpload: getEnvAsBool("DELETE_LOCAL_FILE_AFTER_UPLOAD"),
+		SyncRetryInterval:          getEnvAsInt("SYNC_RETRY_INTERVAL"),
 		GdriveClient: &GdriveClient{
-			UseServiceAccountAuth:      getEnvAsBool("USE_SERVICE_ACCOUNT_AUTH"),
+			ServiceAccountAuth:         getEnvAsBool("SERVICE_ACCOUNT_AUTH"),
+			ServiceAccountAuthFlag:     constants.ServiceAccountAuthFlag,
+			ServiceAccountAuthFileName: getEnvWithDefault("SERVICE_ACCOUNT_AUTH_FILE_NAME", ""),
 			UploadArg:                  constants.UploadArg,
 			ConfigDirFlag:              constants.ConfigDirFlag,
-			ConfigDir:                  getEnvWithDefault("GDRIVE_CONFIG_DIR", util.GetDefaultConfigDir()),
-			ServiceAccountAuthFlag:     constants.ServiceAccountAuthFlag,
-			ServiceAccountAuthFileName: getServiceAccountAuthFileName("SERVICE_ACCOUNT_AUTH_FILE_NAME"),
+			ConfigDirPath:              getEnvWithDefault("GDRIVE_CONFIG_DIR", util.GetDefaultConfigDir()),
 			ParentRemoteDirFlag:        constants.ParentRemoteDirFlag,
 			ParentRemoteDirID:          getEnv("PARENT_REMOTE_DIR_ID"),
 		},
 	}
 }
 
-type GdriveClient struct {
-	UseServiceAccountAuth      bool
-	UploadArg                  string
-	ConfigDirFlag              string
-	ConfigDir                  string
-	ServiceAccountAuthFlag     string
-	ServiceAccountAuthFileName string
-	ParentRemoteDirFlag        string
-	ParentRemoteDirID          string
-}
-
-func getSyncAction(key string) string {
-	syncAction := getEnv(key)
-
-	if !slices.Contains(constants.AllowedSyncActions, syncAction) {
-		panic(fmt.Sprintf("not allowed %s. value must be in %#v", key, constants.AllowedSyncActions))
+func (c *Config) ValidateConfig() error {
+	if !slices.Contains(constants.AllowedSyncActions, c.SyncAction) {
+		return fmt.Errorf("not allowed %s. value must be in %#v", c.SyncAction, constants.AllowedSyncActions)
+	}
+	if c.GdriveClient.ServiceAccountAuth && c.GdriveClient.ServiceAccountAuthFileName == "" {
+		return fmt.Errorf("SERVICE_ACCOUNT_AUTH_FILE_NAME is required when SERVICE_ACCOUNT_AUTH is set true")
 	}
 
-	return syncAction
-}
-
-func getServiceAccountAuthFileName(key string) string {
-	useServiceAccountAuth := getEnvAsBool("USE_SERVICE_ACCOUNT_AUTH")
-	serviceAccountAuthFileName := os.Getenv(key)
-
-	if useServiceAccountAuth && serviceAccountAuthFileName == "" {
-		panic(fmt.Sprintf("%s not set", key))
-	}
-
-	return serviceAccountAuthFileName
+	return nil
 }
 
 func getEnv(key string) string {

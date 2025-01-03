@@ -12,25 +12,19 @@ Create an `.env` and set all the environment variables from `.env-example`
 
 ## Instalation
 
-### Compile from source
+### Install binary
 
 ```bash
-go get github.com/grandeto/gdriver
+go install github.com/grandeto/gdriver@latest
 ```
 
 The gdriver binary should now be available at `$GOPATH/bin/gdriver`
 
-or
+### Compile binary from source
 
-Download `gdriver` from one of the [links in the latest release](https://github.com/grandeto/gdriver/releases)
-
-then
-
-`go build .`
-
-## Initialization
-
-Run compiled binary as a daemon or through supervisor
+```bash
+git clone https://github.com/grandeto/gdriver && cd gdriver && go build .
+```
 
 ## Authentication
 
@@ -41,7 +35,7 @@ You need to choose between two authentication methods:
 For server to server communication, where user interaction is not a viable option, 
 is it possible to use a service account, as described in this [Google document](https://developers.google.com/identity/protocols/OAuth2ServiceAccount).
 If you want to use a service account, instead of being interactively prompted for
-authentication, you need to set up `USE_SERVICE_ACCOUNT_AUTH` environment variable to `true`
+authentication, you need to set up `SERVICE_ACCOUNT_AUTH` environment variable to `true`
 and `AUTH_SERVICE_ACCOUNT_FILE_NAME` to hold your Service Account file name 
 e.g. `AUTH_SERVICE_ACCOUNT_FILE_NAME="gdrive-automated-asdf.json"`.
 Then place your Service Account file inside your `GDRIVE_CONFIG_DIR` (deafults to `~/.gdrive`).
@@ -50,7 +44,7 @@ Note that anyone with access to this file will also have access to your google d
 
 ### Prompt
 
-You need to set up `USE_SERVICE_ACCOUNT_AUTH` environment variable to `false`
+You need to set up `SERVICE_ACCOUNT_AUTH` environment variable to `false`
 
 The first time gdriver is launched and takes an upload/sync action 
 you will be prompted for a verification code.
@@ -66,9 +60,15 @@ Note that anyone with access to this file will also have access to your google d
 If you want to manage multiple drives you can set different environment variable `GDRIVE_CONFIG_DIR` for each client binary you build.
 Example: `GDRIVE_CONFIG_DIR="/home/user/.gdrive-secondary"`
 
-## Ubuntu - Example systemd user config
+## Initialization
 
-- in `~/.config/systemd/user/gdriver.service`
+Run compiled binary as a daemon or through supervisor
+
+Make sure you have set up an `.env` following the `.env-example` in e.g. `/home/<user>/.gdrive/.env`
+
+### Ubuntu - Example systemd user config
+
+- create `~/.config/systemd/user/gdriver.service`
 
 ```
 [Unit]
@@ -78,22 +78,27 @@ RequiresMountsFor=/home
 After=network.target network-online.target
 
 [Service]
-EnvironmentFile=/home/user/go/gdriver/.env
-WorkingDirectory=/home/user/go/gdriver
-ExecStart=/home/user/go/gdriver/gdriver
+EnvironmentFile=/home/<user>/.gdrive/.env
+WorkingDirectory=/home/<user>/go/bin
+ExecStart=/home/<user>/go/bin/gdriver
 Restart=always
 
 [Install]
 WantedBy=default.target network-online.target
 ```
 
-- `systemctl start gdriver --user`
+- start gdriver.service
 
-- `systemctl enable gdriver --user`
+```bash
+systemctl --user daemon-reload
+systemctl --user start gdriver
+systemctl --user enable gdriver
+systemctl --user status gdriver
+```
 
-## Mac - Example plist user config
+### Mac OS - Example plist user config
 
-- in `~/Library/LaunchAgents/com.gdriver.plist`
+- create `~/Library/LaunchAgents/com.gdriver.plist`
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -118,7 +123,9 @@ WantedBy=default.target network-online.target
 </plist>
 ```
 
-- `launchctl load -w ~/Library/LaunchAgents/com.gdriver.plist`
+- start com.gdriver.plist
+
+	`launchctl load -w ~/Library/LaunchAgents/com.gdriver.plist`
 
 ## Other
 
