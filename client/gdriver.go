@@ -22,10 +22,10 @@ func (c *GdriveClient) Start() {
 	cli.SetHandlers(handlers)
 }
 
-func (c *GdriveClient) UploadFileToDir(localFilePath string) bool {
-	args := []string{c.cfg.UploadArg, c.cfg.ParentRemoteDirFlag, c.cfg.ParentRemoteDirID, localFilePath, c.cfg.ConfigDirFlag, c.cfg.ConfigDir}
+func (c *GdriveClient) UploadFileToDir(fileToSync string) bool {
+	args := []string{c.cfg.UploadArg, c.cfg.ParentRemoteDirFlag, c.cfg.ParentRemoteDirID, fileToSync, c.cfg.ConfigDirFlag, c.cfg.ConfigDirPath}
 
-	if c.cfg.UseServiceAccountAuth {
+	if c.cfg.ServiceAccountAuth {
 		args = append(args, c.cfg.ServiceAccountAuthFlag, c.cfg.ServiceAccountAuthFileName)
 	}
 

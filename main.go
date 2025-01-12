@@ -12,14 +12,17 @@ import (
 
 func main() {
 	cfg := config.NewConfig()
+	if err := cfg.ValidateConfig(); err != nil {
+		logger.Fatal(err)
+	}
 
 	client := client.NewGdriveClient(cfg.GdriveClient)
 
 	eventHandler := event.NewEventHandler(cfg)
 
-	syncer := initialsyncer.NewInitialSync(cfg.LocalDirToWatchAbsPath, eventHandler, client)
+	syncer := initialsyncer.NewInitialSync(cfg.LocalDirToSync, eventHandler, client)
 
-	watcher, watcherErr := watcher.NewWatchProcessor(cfg.LocalDirToWatchAbsPath)
+	watcher, watcherErr := watcher.NewWatchProcessor(cfg.LocalDirToSync)
 
 	if watcherErr != nil {
 		logger.Fatal(watcherErr)

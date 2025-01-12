@@ -19,18 +19,18 @@ type Watcher interface {
 }
 
 type WatchProcessor struct {
-	LocalDirToWatchAbsPath string
-	processor              *fsnotify.Watcher
+	LocalDirToSync string
+	processor      *fsnotify.Watcher
 }
 
-func NewWatchProcessor(LocalDirToWatchAbsPath string) (*WatchProcessor, error) {
+func NewWatchProcessor(LocalDirToSync string) (*WatchProcessor, error) {
 	watcher, err := fsnotify.NewWatcher()
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &WatchProcessor{LocalDirToWatchAbsPath, watcher}, nil
+	return &WatchProcessor{LocalDirToSync, watcher}, nil
 }
 
 func (wp *WatchProcessor) WatchDir(dirpath string) error {
@@ -55,7 +55,7 @@ func (wp *WatchProcessor) Watch(eventHandler event.Eventer, client client.Synchr
 	go wp.DedupLoop(eventHandler, client)
 
 	// Add a path.
-	err := wp.WatchDir(wp.LocalDirToWatchAbsPath)
+	err := wp.WatchDir(wp.LocalDirToSync)
 
 	if err != nil {
 		return err

@@ -21,7 +21,7 @@ const (
 )
 
 var (
-	AllowedSyncActions         []string = []string{UploadFileToDir}
-	AllowedOnFileCreateActions []string = []string{UploadFileToDir}
-	AllowedDeleteAfterUpload   []string = []string{UploadFileToDir}
+	AllowedSyncActions                []string = []string{UploadFileToDir}
+	AllowedOnFileCreateActions        []string = []string{UploadFileToDir}
+	AllowedDeleteLocalFileAfterUpload []string = []string{UploadFileToDir}
 )

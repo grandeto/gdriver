@@ -87,9 +87,9 @@ func (e *Event) PostProcess(result bool) {
 	// TODO implement retry until and max retry
 	if !result {
 		logger.Error(fmt.Sprintf("event processing failed: %s - %s - %s - %s - %s",
-			e.Payload.file, e.Payload.operation, e.Cfg.SyncAction, e.Cfg.LocalDirToWatchAbsPath, e.Cfg.GdriveClient.ParentRemoteDirID))
+			e.Payload.file, e.Payload.operation, e.Cfg.SyncAction, e.Cfg.LocalDirToSync, e.Cfg.GdriveClient.ParentRemoteDirID))
 
-		time.Sleep(time.Duration(e.Cfg.QueueProcessingInterval) * time.Second)
+		time.Sleep(time.Duration(e.Cfg.SyncRetryInterval) * time.Second)
 
 		logger.Info("prcessing queued ", e.Payload.file)
 
@@ -97,13 +97,13 @@ func (e *Event) PostProcess(result bool) {
 	}
 
 	if result {
-		if e.Cfg.DeleteAfterUpload && slices.Contains(constants.AllowedDeleteAfterUpload, e.Cfg.SyncAction) {
-			e.HandleFileDeleteAfterUpload()
+		if e.Cfg.DeleteLocalFileAfterUpload && slices.Contains(constants.AllowedDeleteLocalFileAfterUpload, e.Cfg.SyncAction) {
+			e.HandleFileDeleteLocalFileAfterUpload()
 		}
 	}
 }
 
-func (e *Event) HandleFileDeleteAfterUpload() {
+func (e *Event) HandleFileDeleteLocalFileAfterUpload() {
 	// TODO implement retry until and max retry
 	if fileExists(e.Payload.file) {
 		if err := os.Remove(e.Payload.file); err != nil {
@@ -112,14 +112,14 @@ func (e *Event) HandleFileDeleteAfterUpload() {
 				e.Payload.file,
 				e.Payload.operation,
 				e.Cfg.SyncAction,
-				e.Cfg.LocalDirToWatchAbsPath,
+				e.Cfg.LocalDirToSync,
 				e.Cfg.GdriveClient.ParentRemoteDirID))
 
-			time.Sleep(time.Duration(e.Cfg.QueueProcessingInterval) * time.Second)
+			time.Sleep(time.Duration(e.Cfg.SyncRetryInterval) * time.Second)
 
 			logger.Info("deletion queued ", e.Payload.file)
 
-			e.HandleFileDeleteAfterUpload()
+			e.HandleFileDeleteLocalFileAfterUpload()
 		}
 	}
 }
